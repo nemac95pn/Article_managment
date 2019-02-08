@@ -1,0 +1,46 @@
+#picturePreview {
+    max-height: 150px;
+    max-width: 150px; 
+}
+
+input:focus {
+    border: 2px solid green !important;
+}
+
+#characterCounter {
+    float:right;
+}
+
+#searchBar {
+    float:right;
+}
+
+#articleDescription {
+    height: 80px;
+    resize: none;
+}
+
+.invalidInput:focus, .invalidInput {
+    border: 2px solid red !important;
+}
+
+.invalidInputText {
+    color: red;
+}
+
+.relativePosition {
+    position: relative;
+}
+
+.sizeOfPictureInCell {
+    max-height: 150px;
+    max-width: 150px;
+}
+
+.table-striped > tbody > tr:nth-of-type(odd) {
+  background-color: #d6fcff;
+}
+
+
+
+

@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+
+
+<html>
+    <head>
+        <title>Rad Sa Artiklima</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+              integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
+              crossorigin="anonymous"> 
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css"
+              integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp"
+              crossorigin="anonymous">     
+        <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.11.1/bootstrap-table.min.css">
+        <link rel="stylesheet" href="style.css">
+    </head> 
+    <body>
+        <div class="container">
+            <form>
+                <div class="form-group">
+                    <label for="articleName">Ime Artikla: </label>
+                    <input id="articleName" type="text" class="form-control"/>
+                </div>
+
+                <div class="form-group">
+                    <label for="articleBarcode">Barkod Artikla: </label>
+                    <input id="articleBarcode" type="text" class="form-control"/>
+                </div>
+
+                <div class="form-group">
+                    <label for="articleType">Izaberite Tip: </label>
+                    <select id="articleType">
+                        <option value="0">Papirna Galanterija</option>
+                        <option value="1">Vlazne Maramice</option>
+                        <option value="2">Kozmetika</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="articleBasePrice">Cena Artikla Bez PDV-a: </label>
+                    <input id="articleBasePrice" type="text" class="form-control" value="0"/>
+                </div>
+
+                <div class="form-group">
+                    <label for="articleVATPrice">Cena Artikla Sa PDV-om: </label>
+                    <input id="articleVATPrice" type="text" class="form-control" value="0" disabled required />
+                </div>
+
+                <div class="form-group relativePosition">
+                    <label for="articleDescription">Opis Artikla: </label><div id="characterCounter"></div>
+                    <textarea id="articleDescription" class="form-control" placeholder="Unesite Opis Artikla"></textarea>
+                </div>
+
+                <div id="pictureDiv" class="form-group">
+                    <label for="articlePicture">Slika Artikla: </label>
+                    <input id="articlePicture" type="file" class="form-control"/>
+                    <img id="picturePreview">
+                </div>
+
+                <div class="form-group">
+                    <button id="saveButton" type="button">Sacuvaj</button>
+                </div>
+
+            </form>
+            <input type="text" id="searchBar" onkeyup="searchTable()" placeholder="Pretraga po Imenu...">
+            <table id="tableOfArticles"></table>
+        </div>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.11.1/bootstrap-table.min.js"></script>
+
+        <script>
+
+                function searchTable() {
+                    var input, filter, table, tr, td, i;
+                    input = document.getElementById("searchBar");
+                    filter = input.value.toUpperCase();
+                    table = document.getElementById("tableOfArticles");
+                    tr = table.getElementsByTagName("tr");
+
+                    for (i = 0; i < tr.length; i++) {
+                        td = tr[i].getElementsByTagName("td")[0];
+                        if (td) {
+                            if (td.innerHTML.toUpperCase().indexOf(filter) > -1) {
+                                tr[i].style.display = "";
+                            } else {
+                                tr[i].style.display = "none";
+                            }
+                        }
+                    }
+                }
+
+                function previewPicture(input) {
+                    if (input.files && input.files[0]) {
+                        var reader = new FileReader();
+                        var file = input.files[0];
+                        if (file["type"] != "image/png") {
+                            alert("Slika mora biti .png format!");
+                        } else {
+                            reader.onload = function (e) {
+                                $('#picturePreview').attr('src', e.target.result);
+                            };
+                            reader.readAsDataURL(input.files[0]);
+                        }
+                    }
+                }
+
+                $(function () {
+                    $("#articlePicture").change(function () {
+                        previewPicture(this);
+                    });
+                    $("#articleName").on('focus keyup', function () {
+                        if ($(this).val().length < 1) {
+                            $(this).addClass("invalidInput");
+                        } else {
+                            $(this).removeClass("invalidInput");
+                        }
+                    });
+
+                    $("#articleBarcode").on('focus keyup', function () {
+                        if ($(this).val().length < 1 || !$.isNumeric($(this).val())) {
+
+                            $(this).addClass("invalidInput");
+                        } else {
+                            $(this).removeClass("invalidInput");
+                        }
+                    });
+
+                    $("#articleBasePrice").on('focus keyup', function () {
+                        var price = $(this).val();
+                        if (!$.isNumeric($(this).val()) || Math.floor(price) != price) {
+                            $(this).addClass("invalidInput");
+                        } else {
+                            $(this).removeClass("invalidInput");
+                            $("#articleVATPrice").val(toVATPrice());
+                        }
+                    });
+
+                    function toVATPrice() {
+
+                        var price = $("#articleBasePrice").val();
+                        var vatCalc = (price / 100) * 20;
+                        var vatFinal = parseInt(price) + parseFloat(vatCalc);
+                        return vatFinal;
+                    }
+
+                    $("#articleDescription").on('focus keyup', function () {
+
+                        var counter = 200 - $(this).val().length;
+                        $("#characterCounter").text(counter).show();
+
+                        if ($(this).val().length > 200) {
+                            $(this).addClass("invalidInput");
+                            $("#characterCounter").addClass("invalidInputText");
+                        } else {
+                            $(this).removeClass("invalidInput");
+                            $("#characterCounter").removeClass("invalidInputText");
+                        }
+                    });
+
+                    $("#articleDescription").on('blur', function () {
+                        $("#characterCounter").hide();
+                    });
+
+                    $("#saveButton").click(function () {
+
+                        if ($("#articleBarcode").val().length < 1 ||
+                                !$.isNumeric($("#articleBarcode").val()) ||
+                                !$.isNumeric($("#articleBasePrice").val()) ||
+                                Math.floor($("#articleBasePrice").val()) != $("#articleBasePrice").val()
+                                || $("#articleDescription").val().length > 200) {
+
+                            alert("Neko polje nije validno!");
+
+                        } else {
+
+                            var name = $("#articleName").val();
+                            var barcode = $("#articleBarcode").val();
+                            var description = $("#articleDescription").val();
+                            var basePrice = $("#articleBasePrice").val();
+                            var VAT = (basePrice / 100) * 20;
+                            var VATPrice = parseInt(basePrice) + parseFloat(VAT);
+                            var category = $("#articleType").val();
+                            var categoryAr = ["Papirna Galanterija", "Vlazne Maramice", "Kozmetika"];
+                            var today = new Date();
+                            var date = today.getDate() + '-' + (today.getMonth() + 1 + '-' + today.getFullYear());
+                            var time = today.getHours() + ':' + today.getMinutes() + ':' + today.getSeconds();
+
+                            var tableRef = document.getElementById('tableOfArticles');
+                            var newRow = tableRef.insertRow(tableRef.rows.length);
+
+                            var nameCell = newRow.insertCell(0);
+                            var barcodeCell = newRow.insertCell(1);
+                            var categoryCell = newRow.insertCell(2)
+                            var basePriceCell = newRow.insertCell(3);
+                            var VATPriceCell = newRow.insertCell(4);
+                            var descriptionCell = newRow.insertCell(5);
+                            var pictureCell = newRow.insertCell(6);
+                            var dateCell = newRow.insertCell(7);
+                            var timeCell = newRow.insertCell(8);
+
+                            var nameNode = document.createTextNode(name);
+                            var barcodeNode = document.createTextNode(barcode);
+                            var basePriceNode = document.createTextNode(basePrice);
+                            var VATPriceNode = document.createTextNode(VATPrice);
+                            var descriptionNode = document.createTextNode(description);
+                            var categoryNode = document.createTextNode(categoryAr[category]);
+                            var d = document.getElementById("picturePreview");
+                            d.className += "sizeOfPictureInCell";
+                            var clone = d.cloneNode(true);
+                            var dateNode = document.createTextNode(date);
+                            var timeNode = document.createTextNode(time);
+
+                            nameCell.appendChild(nameNode);
+                            barcodeCell.appendChild(barcodeNode);
+                            categoryCell.appendChild(categoryNode);
+                            basePriceCell.appendChild(basePriceNode);
+                            VATPriceCell.appendChild(VATPriceNode);
+                            descriptionCell.appendChild(descriptionNode);
+                            pictureCell.appendChild(clone);
+                            dateCell.appendChild(dateNode);
+                            timeCell.appendChild(timeNode);
+
+
+                        }
+                    });
+
+                    $('#tableOfArticles').bootstrapTable({
+
+                        formatNoMatches: function () {
+                            return;
+                        },
+                        striped: true,
+
+                        columns: [{
+                                field: 'name',
+                                title: 'Naziv Artikla',
+
+                            }, {
+                                field: 'barcode',
+                                title: 'Barkod'
+                            }, {
+                                field: 'category',
+                                title: 'Kategorija'
+                            }, {
+                                field: 'basePrice',
+                                title: 'Cena bez PDV'
+                            }, {
+                                field: 'VATPrice',
+                                title: 'Cena sa PDV'
+                            }, {
+                                field: 'descritpion',
+                                title: 'Opis'
+                            }, {
+                                field: 'picture',
+                                title: 'Slika'
+                            }, {
+                                field: 'date',
+                                title: 'Datum'
+                            }, {
+                                field: 'time',
+                                title: 'Vreme'
+                            }]
+
+                    });
+                });
+
+        </script>
+    </body>
+</html>
